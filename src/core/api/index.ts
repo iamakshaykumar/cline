@@ -38,6 +38,7 @@ import { QwenCodeHandler } from "./providers/qwen-code"
 import { RequestyHandler } from "./providers/requesty"
 import { SambanovaHandler } from "./providers/sambanova"
 import { SapAiCoreHandler } from "./providers/sapaicore"
+import { SarvamHandler } from "./providers/sarvam"
 import { TogetherHandler } from "./providers/together"
 import { VercelAIGatewayHandler } from "./providers/vercel-ai-gateway"
 import { VertexHandler } from "./providers/vertex"
@@ -442,6 +443,14 @@ function createHandlerForProvider(
 				onRetryAttempt: options.onRetryAttempt,
 				nousResearchApiKey: options.nousResearchApiKey,
 				apiModelId: mode === "plan" ? options.planModeNousResearchModelId : options.actModeNousResearchModelId,
+			})
+		case "sarvam":
+			return new SarvamHandler({
+				onRetryAttempt: options.onRetryAttempt,
+				sarvamApiKey: options.sarvamApiKey,
+				sarvamBaseUrl: options.sarvamBaseUrl,
+				sarvamModelId: mode === "plan" ? options.planModeSarvamModelId : options.actModeSarvamModelId,
+				sarvamModelInfo: mode === "plan" ? options.planModeSarvamModelInfo : options.actModeSarvamModelInfo,
 			})
 		default:
 			return new AnthropicHandler({

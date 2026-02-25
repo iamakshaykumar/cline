@@ -163,6 +163,10 @@
 		{
 			"value": "nousResearch",
 			"label": "NousResearch"
+		},
+		{
+			"value": "sarvam",
+			"label": "Sarvam AI"
 		}
 	]
 }

@@ -63,6 +63,8 @@ import {
 	sambanovaModels,
 	sapAiCoreDefaultModelId,
 	sapAiCoreModels,
+	sarvamDefaultModelId,
+	sarvamModels,
 	vertexDefaultModelId,
 	vertexModels,
 	xaiDefaultModelId,
@@ -140,6 +142,8 @@ export function getModelsForProvider(
 			return huggingFaceModels
 		case "nousResearch":
 			return nousResearchModels
+		case "sarvam":
+			return sarvamModels
 		case "litellm":
 			return dynamicModels?.liteLlmModels
 		// Providers with dynamic models - return undefined
@@ -492,6 +496,16 @@ export function normalizeApiConfiguration(
 						? nousResearchModels[nousResearchModelId as keyof typeof nousResearchModels]
 						: nousResearchModels[nousResearchDefaultModelId],
 			}
+		case "sarvam":
+			const sarvamModelId =
+				currentMode === "plan" ? apiConfiguration?.planModeSarvamModelId : apiConfiguration?.actModeSarvamModelId
+			const sarvamModelInfo =
+				currentMode === "plan" ? apiConfiguration?.planModeSarvamModelInfo : apiConfiguration?.actModeSarvamModelInfo
+			return {
+				selectedProvider: provider,
+				selectedModelId: sarvamModelId || sarvamDefaultModelId,
+				selectedModelInfo: sarvamModelInfo || sarvamModels[sarvamDefaultModelId],
+			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 	}
@@ -527,6 +541,7 @@ export function getModeSpecificFields(apiConfiguration: ApiConfiguration | undef
 			aihubmixModelId: undefined,
 			nousResearchModelId: undefined,
 			vercelAiGatewayModelId: undefined,
+			sarvamModelId: undefined,
 
 			// Model info objects
 			openAiModelInfo: undefined,
@@ -538,6 +553,7 @@ export function getModeSpecificFields(apiConfiguration: ApiConfiguration | undef
 			huggingFaceModelInfo: undefined,
 			vsCodeLmModelSelector: undefined,
 			aihubmixModelInfo: undefined,
+			sarvamModelInfo: undefined,
 
 			// AWS Bedrock fields
 			awsBedrockCustomSelected: undefined,
@@ -580,6 +596,7 @@ export function getModeSpecificFields(apiConfiguration: ApiConfiguration | undef
 			mode === "plan" ? apiConfiguration.planModeNousResearchModelId : apiConfiguration.actModeNousResearchModelId,
 		vercelAiGatewayModelId:
 			mode === "plan" ? apiConfiguration.planModeVercelAiGatewayModelId : apiConfiguration.actModeVercelAiGatewayModelId,
+		sarvamModelId: mode === "plan" ? apiConfiguration.planModeSarvamModelId : apiConfiguration.actModeSarvamModelId,
 
 		// Model info objects
 		openAiModelInfo: mode === "plan" ? apiConfiguration.planModeOpenAiModelInfo : apiConfiguration.actModeOpenAiModelInfo,
@@ -601,6 +618,7 @@ export function getModeSpecificFields(apiConfiguration: ApiConfiguration | undef
 			mode === "plan"
 				? apiConfiguration.planModeVercelAiGatewayModelInfo
 				: apiConfiguration.actModeVercelAiGatewayModelInfo,
+		sarvamModelInfo: mode === "plan" ? apiConfiguration.planModeSarvamModelInfo : apiConfiguration.actModeSarvamModelInfo,
 
 		// AWS Bedrock fields
 		awsBedrockCustomSelected:
@@ -780,6 +798,13 @@ export async function syncModeConfigurations(
 			updates.actModeNousResearchModelId = sourceFields.nousResearchModelId
 			break
 
+		case "sarvam":
+			updates.planModeSarvamModelId = sourceFields.sarvamModelId
+			updates.planModeSarvamModelInfo = sourceFields.sarvamModelInfo
+			updates.actModeSarvamModelId = sourceFields.sarvamModelId
+			updates.actModeSarvamModelInfo = sourceFields.sarvamModelInfo
+			break
+
 		case "aihubmix":
 			updates.planModeAihubmixModelId = sourceFields.aihubmixModelId
 			updates.planModeAihubmixModelInfo = sourceFields.aihubmixModelInfo
@@ -904,6 +929,12 @@ export const getProviderInfo = (
 					effectiveMode === "plan" ? apiConfiguration.planModeAihubmixModelId : apiConfiguration.actModeAihubmixModelId,
 				baseUrl: apiConfiguration.aihubmixBaseUrl,
 				helpText: "Add your AIHubMix API key in settings",
+			}
+		case "sarvam":
+			return {
+				modelId: effectiveMode === "plan" ? apiConfiguration.planModeSarvamModelId : apiConfiguration.actModeSarvamModelId,
+				baseUrl: apiConfiguration.sarvamBaseUrl,
+				helpText: "Add your Sarvam AI API key in settings",
 			}
 		default:
 			return {

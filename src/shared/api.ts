@@ -43,6 +43,7 @@ export type ApiProvider =
 	| "minimax"
 	| "hicap"
 	| "nousResearch"
+	| "sarvam"
 
 export const DEFAULT_API_PROVIDER = "openrouter" as ApiProvider
 
@@ -4557,5 +4558,22 @@ export const nousResearchModels = {
 		outputPrice: 0.2,
 		description:
 			"This incarnation of Hermes 4 balances scale and size. It handles complex reasoning tasks, while staying fast and cost effective. A versatile choice for many use cases.",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Sarvam AI
+// https://docs.sarvam.ai/
+export type SarvamModelId = keyof typeof sarvamModels
+export const sarvamDefaultModelId: SarvamModelId = "sarvam-m"
+export const sarvamModels = {
+	"sarvam-m": {
+		maxTokens: 8192,
+		contextWindow: 8192,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description:
+			"Sarvam-m generates human-like text for a seamless chatting experience, providing a smooth and accessible multilingual conversation experience.",
 	},
 } as const satisfies Record<string, ModelInfo>

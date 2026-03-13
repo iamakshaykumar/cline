@@ -1,8 +1,8 @@
 import { ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
 import OpenAI from "openai"
-import { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
+import { ClineTool } from "@/shared/tools"
 import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -38,33 +38,37 @@ export class SarvamHandler implements ApiHandler {
 	}
 
 	@withRetry()
-	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
+	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ClineTool[]): ApiStream {
 		const client = this.ensureClient()
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const modelInfo = this.getModel().info
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),
 		]
 
+		const openAiTools = tools?.filter(
+			(tool): tool is OpenAI.Chat.ChatCompletionTool => "type" in tool && tool.type === "function",
+		)
+
 		let temperature: number | undefined
-		if (this.options.sarvamModelInfo?.temperature !== undefined) {
-			temperature = Number(this.options.sarvamModelInfo.temperature)
+		if (modelInfo.temperature !== undefined) {
+			temperature = Number(modelInfo.temperature)
 		}
 
 		let maxTokens: number | undefined
-		if (this.options.sarvamModelInfo?.maxTokens && this.options.sarvamModelInfo.maxTokens > 0) {
-			maxTokens = Number(this.options.sarvamModelInfo.maxTokens)
+		if (modelInfo.maxTokens && modelInfo.maxTokens > 0) {
+			maxTokens = Number(modelInfo.maxTokens)
 		}
 
 		const stream = await client.chat.completions.create({
-			model: modelId,
+			model: this.getModel().id,
 			messages: openAiMessages,
 			temperature,
 			max_tokens: maxTokens,
 			stream: true,
 			stream_options: { include_usage: true },
-			...getOpenAIToolParams(tools),
+			...getOpenAIToolParams(openAiTools),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()

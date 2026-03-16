@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
+import { ClineTool } from "@/shared/tools"
 import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -38,7 +39,7 @@ export class SarvamHandler implements ApiHandler {
 	}
 
 	@withRetry()
-	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
+	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ClineTool[]): ApiStream {
 		const client = this.ensureClient()
 		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
 
@@ -47,15 +48,26 @@ export class SarvamHandler implements ApiHandler {
 			...convertToOpenAiMessages(messages),
 		]
 
+		const modelInfo = this.getModel().info
+
 		let temperature: number | undefined
-		if (this.options.sarvamModelInfo?.temperature !== undefined) {
-			temperature = Number(this.options.sarvamModelInfo.temperature)
+		if (modelInfo.temperature !== undefined) {
+			temperature = Number(modelInfo.temperature)
 		}
 
 		let maxTokens: number | undefined
-		if (this.options.sarvamModelInfo?.maxTokens && this.options.sarvamModelInfo.maxTokens > 0) {
-			maxTokens = Number(this.options.sarvamModelInfo.maxTokens)
+		if (modelInfo.maxTokens && modelInfo.maxTokens > 0) {
+			maxTokens = Number(modelInfo.maxTokens)
 		}
+
+		// When passing `ClineTool[]` to OpenAI-compatible endpoints in API handlers,
+		// safely filter them using a type guard (e.g., checking for 'type' in tool
+		// and 'tool.type === "function"') rather than using unsafe type casting to
+		// maintain TypeScript strict mode compliance.
+		// NOTE: Tools passed to this handler by `getNativeTools` will natively have
+		// `type: "function"` as long as the default OpenAI tool spec converter is used.
+		// Thus, this safely preserves functionality without silently dropping tools.
+		const openAiTools = tools?.filter((tool): tool is ChatCompletionTool => "type" in tool && tool.type === "function")
 
 		const stream = await client.chat.completions.create({
 			model: modelId,
@@ -64,7 +76,7 @@ export class SarvamHandler implements ApiHandler {
 			max_tokens: maxTokens,
 			stream: true,
 			stream_options: { include_usage: true },
-			...getOpenAIToolParams(tools),
+			...getOpenAIToolParams(openAiTools),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()

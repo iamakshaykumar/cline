@@ -47,14 +47,16 @@ export class SarvamHandler implements ApiHandler {
 			...convertToOpenAiMessages(messages),
 		]
 
+		const modelInfo = this.getModel().info
+
 		let temperature: number | undefined
-		if (this.options.sarvamModelInfo?.temperature !== undefined) {
-			temperature = Number(this.options.sarvamModelInfo.temperature)
+		if (modelInfo?.temperature !== undefined) {
+			temperature = Number(modelInfo.temperature)
 		}
 
 		let maxTokens: number | undefined
-		if (this.options.sarvamModelInfo?.maxTokens && this.options.sarvamModelInfo.maxTokens > 0) {
-			maxTokens = Number(this.options.sarvamModelInfo.maxTokens)
+		if (modelInfo?.maxTokens && modelInfo.maxTokens > 0) {
+			maxTokens = Number(modelInfo.maxTokens)
 		}
 
 		const stream = await client.chat.completions.create({

@@ -1,6 +1,6 @@
 import { ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
 import OpenAI from "openai"
-import { ChatCompletionTool } from "openai/resources/chat/completions"
+import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
 import { ApiHandler, CommonApiHandlerOptions } from "../index"
@@ -47,7 +47,11 @@ export class SarvamHandler implements ApiHandler {
 			...convertToOpenAiMessages(messages),
 		]
 
+		const modelInfo = this.getModel().info
+
 		let temperature: number | undefined
+		// Prefer using the actual passed-in model info if it contains these settings
+		// Otherwise fallback to the global model info (if it somehow has them, though typically it does not)
 		if (this.options.sarvamModelInfo?.temperature !== undefined) {
 			temperature = Number(this.options.sarvamModelInfo.temperature)
 		}
@@ -55,6 +59,8 @@ export class SarvamHandler implements ApiHandler {
 		let maxTokens: number | undefined
 		if (this.options.sarvamModelInfo?.maxTokens && this.options.sarvamModelInfo.maxTokens > 0) {
 			maxTokens = Number(this.options.sarvamModelInfo.maxTokens)
+		} else if (modelInfo.maxTokens && modelInfo.maxTokens > 0) {
+			maxTokens = Number(modelInfo.maxTokens)
 		}
 
 		const stream = await client.chat.completions.create({

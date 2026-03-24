@@ -1,12 +1,12 @@
 import { ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
 import OpenAI from "openai"
-import { ChatCompletionTool } from "openai/resources/chat/completions"
-import { ClineStorageMessage } from "@/shared/messages/content"
+import type { ChatCompletionTool } from "openai/resources/chat/completions"
+import type { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
-import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import type { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStream } from "../transform/stream"
+import type { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
 
 export interface SarvamHandlerOptions extends CommonApiHandlerOptions {
@@ -47,14 +47,16 @@ export class SarvamHandler implements ApiHandler {
 			...convertToOpenAiMessages(messages),
 		]
 
+		const modelInfo = this.getModel().info
+
 		let temperature: number | undefined
-		if (this.options.sarvamModelInfo?.temperature !== undefined) {
-			temperature = Number(this.options.sarvamModelInfo.temperature)
+		if (modelInfo.temperature !== undefined) {
+			temperature = Number(modelInfo.temperature)
 		}
 
 		let maxTokens: number | undefined
-		if (this.options.sarvamModelInfo?.maxTokens && this.options.sarvamModelInfo.maxTokens > 0) {
-			maxTokens = Number(this.options.sarvamModelInfo.maxTokens)
+		if (modelInfo.maxTokens && modelInfo.maxTokens > 0) {
+			maxTokens = Number(modelInfo.maxTokens)
 		}
 
 		const stream = await client.chat.completions.create({

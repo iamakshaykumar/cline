@@ -30,7 +30,7 @@ export class SarvamHandler implements ApiHandler {
 				throw new Error("Sarvam API key is required")
 			}
 			this.client = createOpenAIClient({
-				baseURL: this.options.sarvamBaseUrl || "https://api.sarvam.ai/v1",
+				baseURL: this.options.sarvamBaseUrl ?? "https://api.sarvam.ai/v1",
 				apiKey: this.options.sarvamApiKey,
 			})
 		}
@@ -41,7 +41,7 @@ export class SarvamHandler implements ApiHandler {
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
 		const client = this.ensureClient()
 		const modelInfo = this.getModel().info
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const modelId = this.getModel().id
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -86,8 +86,8 @@ export class SarvamHandler implements ApiHandler {
 			if (chunk.usage) {
 				yield {
 					type: "usage",
-					inputTokens: chunk.usage.prompt_tokens || 0,
-					outputTokens: chunk.usage.completion_tokens || 0,
+					inputTokens: chunk.usage.prompt_tokens ?? 0,
+					outputTokens: chunk.usage.completion_tokens ?? 0,
 				}
 			}
 		}

@@ -1,12 +1,12 @@
-import { ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
+import { type ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
 import OpenAI from "openai"
 import type { ChatCompletionTool } from "openai/resources/chat/completions"
-import { ClineStorageMessage } from "@/shared/messages/content"
+import type { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
-import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import type { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStream } from "../transform/stream"
+import type { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
 
 export interface SarvamHandlerOptions extends CommonApiHandlerOptions {
@@ -30,7 +30,7 @@ export class SarvamHandler implements ApiHandler {
 				throw new Error("Sarvam API key is required")
 			}
 			this.client = createOpenAIClient({
-				baseURL: this.options.sarvamBaseUrl || "https://api.sarvam.ai/v1",
+				baseURL: this.options.sarvamBaseUrl ?? "https://api.sarvam.ai/v1",
 				apiKey: this.options.sarvamApiKey,
 			})
 		}
@@ -41,7 +41,7 @@ export class SarvamHandler implements ApiHandler {
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
 		const client = this.ensureClient()
 		const modelInfo = this.getModel().info
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const modelId = this.getModel().id
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },

@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
+import { ClineTool } from "@/shared/tools"
 import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
@@ -38,7 +39,7 @@ export class SarvamHandler implements ApiHandler {
 	}
 
 	@withRetry()
-	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
+	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ClineTool[]): ApiStream {
 		const client = this.ensureClient()
 		const modelInfo = this.getModel().info
 		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
@@ -58,6 +59,9 @@ export class SarvamHandler implements ApiHandler {
 			maxTokens = Number(modelInfo.maxTokens)
 		}
 
+		// Cast tools to ChatCompletionTool[] since ClineTool is compatible with OpenAI tools
+		const openAiTools = tools as ChatCompletionTool[] | undefined
+
 		const stream = await client.chat.completions.create({
 			model: modelId,
 			messages: openAiMessages,
@@ -65,7 +69,7 @@ export class SarvamHandler implements ApiHandler {
 			max_tokens: maxTokens,
 			stream: true,
 			stream_options: { include_usage: true },
-			...getOpenAIToolParams(tools),
+			...getOpenAIToolParams(openAiTools),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()

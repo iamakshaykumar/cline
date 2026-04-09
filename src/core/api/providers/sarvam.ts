@@ -1,4 +1,5 @@
-import { ModelInfo, sarvamDefaultModelId, sarvamModels } from "@shared/api"
+import { sarvamDefaultModelId, sarvamModels } from "@shared/api"
+import type { ModelInfo } from "@shared/api"
 import OpenAI from "openai"
 import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
@@ -47,6 +48,8 @@ export class SarvamHandler implements ApiHandler {
 			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),
 		]
+
+		const modelInfo = this.getModel().info
 
 		let temperature: number | undefined
 		if (modelInfo.temperature !== undefined) {

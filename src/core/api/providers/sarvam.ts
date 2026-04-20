@@ -40,8 +40,9 @@ export class SarvamHandler implements ApiHandler {
 	@withRetry()
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
 		const client = this.ensureClient()
-		const modelInfo = this.getModel().info
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const model = this.getModel()
+		const modelInfo = model.info
+		const modelId = model.id
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -94,10 +95,10 @@ export class SarvamHandler implements ApiHandler {
 	}
 
 	getModel(): { id: string; info: ModelInfo } {
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const modelId = this.options.sarvamModelId || sarvamDefaultModelId
 		return {
 			id: modelId,
-			info: this.options.sarvamModelInfo ?? sarvamModels[modelId as keyof typeof sarvamModels] ?? sarvamModels[sarvamDefaultModelId],
+			info: this.options.sarvamModelInfo || sarvamModels[modelId as keyof typeof sarvamModels] || sarvamModels[sarvamDefaultModelId],
 		}
 	}
 }

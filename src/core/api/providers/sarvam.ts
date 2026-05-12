@@ -3,7 +3,7 @@ import OpenAI from "openai"
 import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
-import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import { ApiHandler, ApiHandlerModel, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
@@ -93,7 +93,7 @@ export class SarvamHandler implements ApiHandler {
 		}
 	}
 
-	getModel(): { id: string; info: ModelInfo } {
+	getModel(): ApiHandlerModel {
 		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
 		return {
 			id: modelId,

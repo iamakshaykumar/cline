@@ -3,7 +3,7 @@ import OpenAI from "openai"
 import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { createOpenAIClient } from "@/shared/net"
-import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import { ApiHandler, ApiHandlerModel, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
@@ -40,8 +40,7 @@ export class SarvamHandler implements ApiHandler {
 	@withRetry()
 	async *createMessage(systemPrompt: string, messages: ClineStorageMessage[], tools?: ChatCompletionTool[]): ApiStream {
 		const client = this.ensureClient()
-		const modelInfo = this.getModel().info
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+		const { id: modelId, info: modelInfo } = this.getModel()
 
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
@@ -93,8 +92,8 @@ export class SarvamHandler implements ApiHandler {
 		}
 	}
 
-	getModel(): { id: string; info: ModelInfo } {
-		const modelId = this.options.sarvamModelId ?? sarvamDefaultModelId
+	getModel(): ApiHandlerModel {
+		const modelId = this.options.sarvamModelId || sarvamDefaultModelId
 		return {
 			id: modelId,
 			info: this.options.sarvamModelInfo ?? sarvamModels[modelId as keyof typeof sarvamModels] ?? sarvamModels[sarvamDefaultModelId],
